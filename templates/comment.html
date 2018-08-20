@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Comment</title>
+</head>
+<body>
+{% for comment in data.comments %}
+<p>comment: {{comment.message}}</p>
+{% endfor %}
+</body>
+</html>
