@@ -105,3 +105,6 @@ venv.bak/
 
 # pycharm
 .iml
+
+# secret keys
+config.py
