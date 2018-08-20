@@ -22,10 +22,22 @@ USER_URL = BASE_URL + "/users/{user_id}"
 
 
 def login_url(ci):
+    """
+    client idからoauth認証で必要なURLを生成する
+
+    :param ci: client_id
+    :return: formatted URL
+    """
     return OAUTH2_URL + "/authorize?client_id={YOUR_CLIENT_ID}&response_type=code".format(**{"YOUR_CLIENT_ID": ci})
 
 
 def macro_header(access_token):
+    """
+    access_tokenからテンプレートのheaderのdictを生成する
+
+    :param access_token: access_token
+    :return: header dic
+    """
     return {"X-Api-Version": "2.0", "Authorization": "Bearer %s" % access_token}
 
 
@@ -35,7 +47,7 @@ def url2user(url, at):
 
     :param url: living url
     :param at: access_token
-    :return:
+    :return: user object
     """
     user_id = url.split("/")[-1]
     req = requests.get(USER_URL.format(**{"user_id": user_id}), headers=macro_header(at))
@@ -44,6 +56,11 @@ def url2user(url, at):
 
 @app.route('/callback')
 def callback():
+    """
+    callback URLに設定したもの。成功したら、セッションにアクセストークンを保存
+
+    :return: index()
+    """
     code = request.args.get("code")
     payload = {
         "code": code,
@@ -64,6 +81,11 @@ def callback():
 
 @app.route('/comment')
 def comment():
+    """
+    commentを収得するためのテスト
+
+    :return: jinja2 render
+    """
     movie_id = request.args.get("movie_id")
     access_token = session.get('access_token')
     headers = macro_header(access_token)
@@ -76,6 +98,11 @@ def comment():
 
 @app.route('/user')
 def user():
+    """
+    user情報を習得するためのテスト
+
+    :return: jinja2 render
+    """
     user_id = request.args.get('user_id')
     access_token = session.get('access_token')
     headers = macro_header(access_token)
@@ -86,6 +113,11 @@ def user():
 
 @app.route('/')
 def index():
+    """
+    メインのアプリケーションはここで動かしたい。
+
+    :return: jinja2 render
+    """
     access_token = session.get('access_token')
     if access_token:
         return access_token
