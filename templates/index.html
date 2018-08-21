@@ -5,13 +5,16 @@
 {% block content %}
 {{ super() }}
 
-{% if user.is_live %}
-<iframe src="https://twitcasting.tv/{{user.screen_id}}/embeddedplayer/live?auto_play=true&default_mute=false" width="640px" height="360px" frameborder="0" allowfullscreen></iframe>
-{% endif %}
-
-<!-- comment -->
-{% for comment in data.comments %}
-<p>comment: {{comment.message}}</p>
-{% endfor %}
-
+<div class="">
+    <div class="container">
+        <div class="row align-items-center justify-content-center">
+            {% if user.is_live %}
+            <iframe src="https://twitcasting.tv/{{user.screen_id}}/embeddedplayer/live?auto_play=true&default_mute=false" width="960" height="540" frameborder="0" allowfullscreen></iframe>
+            {% endif %}
+        </div>
+        {% for comment in data.comments %}
+        <p>comment: {{comment.message}}</p>
+        {% endfor %}
+    </div>
+</div>
 {% endblock %}

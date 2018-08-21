@@ -50,7 +50,7 @@ def get_user(user_id, at):
     :return: user object
     """
     req = requests.get(USER_URL.format(**{"user_id": user_id}), headers=macro_header(at))
-    return json.loads(req.text)
+    return json.loads(req.text)['user']
 
 
 def url2user(url, at):
@@ -185,8 +185,14 @@ def index():
     if user is None:
         return redirect('/select')
 
+    headers = macro_header(access_token)
+    payload = {"limit": 30}
+    if user["is_live"]:
+        movie_id = user["last_movie_id"]
+        req = requests.get(COMMENT_URL.format(**{"movie_id": movie_id}), data=payload, headers=headers)
+        data = json.loads(req.text)
     print(user)
-    return render_template('index.html', user=user['user'], data={"comments": []})
+    return render_template('index.html', user=user, data=data)
 
 
 if __name__ == '__main__':
