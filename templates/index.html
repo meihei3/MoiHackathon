@@ -1,11 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>hello</title>
-</head>
-<body>
-    <p>{{ text }}</p>
-    <a href="{{ sign_in }}">==========</a>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Select{% endblock title %}
+
+{% block content %}
+{{ super() }}
+
+{% if user.is_live %}
+<iframe src="https://twitcasting.tv/{{user.screen_id}}/embeddedplayer/live?auto_play=true&default_mute=false" width="640px" height="360px" frameborder="0" allowfullscreen></iframe>
+{% endif %}
+
+<!-- comment -->
+{% for comment in data.comments %}
+<p>comment: {{comment.message}}</p>
+{% endfor %}
+
+{% endblock %}
