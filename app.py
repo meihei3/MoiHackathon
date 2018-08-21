@@ -11,8 +11,8 @@ import config
 app = Flask(__name__)
 app.config['SECRET_KEY'] = config.secret_key
 
-client_id = config.client_id
-client_secret = config.client_secret
+CLIENT_ID = config.client_id
+CLIENT_SECRET = config.client_secret
 
 BASE_URL = "https://apiv2.twitcasting.tv"
 OAUTH2_URL = BASE_URL + "/oauth2"
@@ -54,19 +54,55 @@ def url2user(url, at):
     return json.loads(req.text)
 
 
+@app.before_request
+def before_request():
+    """
+    すべてのページで読み込まれる前に呼び出される。loginの判定用
+    """
+    # for css
+    if request.endpoint == 'static':
+        return
+    # is logined
+    if session.get('access_token') is not None:
+        return
+    # Related login
+    if request.path in ('/login', '/callback'):
+        return
+    return redirect('/login')
+
+
+@app.route('/login')
+def login():
+    """
+    loginするためのページ。セッションにアクセストークンがなければ自動的に飛ぶ
+
+    :return: login.html
+    """
+    return render_template('login.html', login_url=login_url(CLIENT_ID))
+
+
+@app.route('/logout')
+def logout():
+    """
+    セッションの中身を無くして、ログアウトする
+    """
+    session.pop("access_token", None)
+    return redirect('/')
+
+
 @app.route('/callback')
 def callback():
     """
     callback URLに設定したもの。成功したら、セッションにアクセストークンを保存
 
-    :return: index()
+    :return: index.html
     """
     code = request.args.get("code")
     payload = {
         "code": code,
         "grant_type": "authorization_code",
-        "client_id": client_id,
-        "client_secret": client_secret,
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
         "redirect_uri": "http://localhost:5000/callback"
     }
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -76,7 +112,7 @@ def callback():
         raise req.text
     data = json.loads(req.text)
     session["access_token"] = data["access_token"]
-    return redirect(url_for('index'))
+    return redirect('/')
 
 
 @app.route('/comment')
@@ -84,7 +120,7 @@ def comment():
     """
     commentを収得するためのテスト
 
-    :return: jinja2 render
+    :return: comment.html
     """
     movie_id = request.args.get("movie_id")
     access_token = session.get('access_token')
@@ -101,7 +137,7 @@ def user():
     """
     user情報を習得するためのテスト
 
-    :return: jinja2 render
+    :return:
     """
     user_id = request.args.get('user_id')
     access_token = session.get('access_token')
@@ -116,13 +152,10 @@ def index():
     """
     メインのアプリケーションはここで動かしたい。
 
-    :return: jinja2 render
+    :return:
     """
     access_token = session.get('access_token')
-    if access_token:
-        return access_token
-    else:
-        return render_template('index.html', sign_in=login_url(client_id), text="login")
+    return access_token
 
 
 if __name__ == '__main__':
