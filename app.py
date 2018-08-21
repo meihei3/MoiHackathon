@@ -125,23 +125,6 @@ def callback():
     return redirect('/')
 
 
-@app.route('/comment')
-def comment():
-    """
-    commentを収得するためのテスト
-
-    :return: comment.html
-    """
-    movie_id = request.args.get("movie_id")
-    access_token = session.get('access_token')
-    headers = macro_header(access_token)
-    payload = {"limit": 15}
-    req = requests.get(COMMENT_URL.format(**{"movie_id": movie_id}), data=payload, headers=headers)
-    print("comment", req.text)
-    data = json.loads(req.text)
-    return render_template('comment.html', data=data)
-
-
 @app.route('/user')
 def user():
     """
