@@ -7,14 +7,41 @@
 
 <div class="">
     <div class="container">
-        <div class="row align-items-center justify-content-center">
-            {% if user.is_live %}
-            <iframe src="https://twitcasting.tv/{{user.screen_id}}/embeddedplayer/live?auto_play=true&default_mute=false" width="960" height="540" frameborder="0" allowfullscreen></iframe>
-            {% endif %}
+        <div class="row py-5 bg-gray">
+            <div class="" id="animation">
+                a
+            </div>
         </div>
-        {% for comment in data.comments %}
+        <div class="row align-items-center justify-content-center">
+            <iframe src="https://twitcasting.tv/{{user.screen_id}}/embeddedplayer/live?auto_play=true&default_mute=false" width="960" height="540" frameborder="0" allowfullscreen></iframe>
+        </div>
+        {% for comment in comments %}
         <p>comment: {{comment.message}}</p>
         {% endfor %}
     </div>
 </div>
-{% endblock %}
+{% endblock content %}
+
+{% block scripts %}
+<script>
+  var i = 0;
+  var animation = document.getElementById('animation');
+  var countup = function(){
+    const request = new XMLHttpRequest();
+    request.open("GET", `http://localhost:5000/api/comment`);
+    <!--var animation = document.getElementById('animation');-->
+    request.addEventListener("load", (event) => {
+        console.log(event.target.status); // => 200
+        var a = event.target.responseText; // => "1", "2", "3"
+        console.log(a == "1")
+        console.log(typeof(a))
+        if (a == "1") {
+        animation.innerHTML = "<img src=\"{url_for('.static', 'img/kusa.png')}\">"
+        }
+        <!--animation.innerHTML = a-->
+    });
+    request.send();
+  };
+  setInterval(countup, 2000);
+</script>
+{% endblock scripts %}

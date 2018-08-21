@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import Flask, render_template, request, session, redirect, url_for
+from flask import Flask, render_template, request, session, redirect, url_for, make_response, jsonify
 
 import requests
 import json
@@ -62,6 +62,22 @@ def url2user(url, at):
     :return: user object
     """
     return get_user(url.split("/")[-1], at)
+
+
+def get_comment(movie_id, at, since_id=None):
+    """
+
+    :param movie_id:
+    :param at:
+    :param since_id:
+    :return:
+    """
+    headers = macro_header(at)
+    payload = {"limit": 30}
+    if since_id is not None:
+        payload["slice_id"] = since_id
+    req = requests.get(COMMENT_URL.format(**{"movie_id": movie_id}), data=payload, headers=headers)
+    return json.loads(req.text)["comments"]
 
 
 @app.before_request
@@ -168,14 +184,25 @@ def index():
     if user is None:
         return redirect('/select')
 
-    headers = macro_header(access_token)
-    payload = {"limit": 30}
-    if user["is_live"]:
-        movie_id = user["last_movie_id"]
-        req = requests.get(COMMENT_URL.format(**{"movie_id": movie_id}), data=payload, headers=headers)
-        data = json.loads(req.text)
-    print(user)
-    return render_template('index.html', user=user, data=data)
+    since_id = (lambda x: x if x else None)(session.get("since_id"))
+    comments = get_comment(user["last_movie_id"], access_token, since_id=since_id) if user["is_live"] else []
+    if comments:
+        session["since_id"] = comments[0]["id"]
+    return render_template('index.html', user=user, comments=comments)
+
+
+@app.route('/api/comment', methods=['GET'])
+def api_get_comment():
+    access_token = session.get('access_token')
+    user = session.get('user')
+    since_id = (lambda x: x if x else None)(session.get("since_id"))
+    print(get_comment(user["last_movie_id"], access_token, since_id=since_id))
+    comments = get_comment(user["last_movie_id"], access_token, since_id=since_id) if user["is_live"] else []
+    if comments:
+        session["since_id"] = comments[0]["id"]
+
+    result = "1"
+    return make_response(jsonify(result))
 
 
 if __name__ == '__main__':
