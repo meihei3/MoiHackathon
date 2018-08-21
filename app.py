@@ -41,6 +41,18 @@ def macro_header(access_token):
     return {"X-Api-Version": "2.0", "Authorization": "Bearer %s" % access_token}
 
 
+def get_user(user_id, at):
+    """
+    user_idからuserオブジェクトを取ってくる
+
+    :param user_id: user_id
+    :param at: access_token
+    :return: user object
+    """
+    req = requests.get(USER_URL.format(**{"user_id": user_id}), headers=macro_header(at))
+    return json.loads(req.text)
+
+
 def url2user(url, at):
     """
     URLからuser objectを返す
@@ -49,9 +61,7 @@ def url2user(url, at):
     :param at: access_token
     :return: user object
     """
-    user_id = url.split("/")[-1]
-    req = requests.get(USER_URL.format(**{"user_id": user_id}), headers=macro_header(at))
-    return json.loads(req.text)
+    return get_user(url.split("/")[-1], at)
 
 
 @app.before_request
@@ -147,6 +157,22 @@ def user():
     return req.text
 
 
+@app.route('/select')
+def select():
+    user = None
+    access_token = session.get('access_token')
+    if request.args.get('url') is not None:
+        user = url2user(request.args.get('url'), access_token)
+    elif request.args.get('id') is not None:
+        user_id = request.args.get('id')
+        user = get_user(user_id, access_token)
+    if user is not None:
+        session.pop('user', None)
+        session["user"] = user
+        return redirect('/')
+    return render_template('select.html')
+
+
 @app.route('/')
 def index():
     """
@@ -155,7 +181,12 @@ def index():
     :return:
     """
     access_token = session.get('access_token')
-    return access_token
+    user = session.get('user')
+    if user is None:
+        return redirect('/select')
+
+    print(user)
+    return render_template('index.html', user=user['user'], data={"comments": []})
 
 
 if __name__ == '__main__':
